@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .idea/
 .codex-runs/
-green-data-center-simulation/
+.green-data-center-simulation/
