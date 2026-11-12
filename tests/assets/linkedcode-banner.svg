@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="350" viewBox="0 0 1280 350" role="img" aria-labelledby="title desc">
+<title id="title">LinkedCode — Practice with direction.</title>
+<desc id="desc">Personalized DSA practice. Your recent coding history leads to one LeetCode recommendation and one original challenge.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#193f33"/><stop offset="1" stop-color="#102c25"/></linearGradient><linearGradient id="accent"><stop stop-color="#d6efa1"/><stop offset="1" stop-color="#a3ca7c"/></linearGradient><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M 32 0 L 0 0 0 32" fill="none" stroke="#a1c584" stroke-opacity=".045"/></pattern></defs>
+<rect width="1280" height="350" rx="20" fill="url(#bg)"/><rect width="1280" height="350" rx="20" fill="url(#grid)"/>
+<circle cx="1080" cy="185" r="245" fill="none" stroke="#8da974" stroke-opacity=".12"/><circle cx="1080" cy="185" r="180" fill="none" stroke="#8da974" stroke-opacity=".12"/>
+<rect x="52" y="39" width="39" height="39" rx="11" fill="#d6efa1"/><text x="59" y="64" fill="#1c4432" font-family="monospace" font-size="19" font-weight="700">&lt;/&gt;</text>
+<text x="104" y="67" fill="#edf5e8" font-family="Segoe UI,Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="-1">LinkedCode<tspan fill="#d6efa1">.</tspan></text>
+<text x="54" y="133" fill="#adca93" font-family="Segoe UI,Arial,sans-serif" font-size="11" letter-spacing="3">PERSONALIZED DSA PRACTICE</text>
+<text x="50" y="193" fill="#f6f8ee" font-family="Segoe UI,Arial,sans-serif" font-size="54" font-weight="650" letter-spacing="-2">Practice with direction.</text>
+<text x="54" y="235" fill="#b9cdb0" font-family="Segoe UI,Arial,sans-serif" font-size="17">Your history. Two next challenges. A clearer path forward.</text>
+<rect x="54" y="276" width="169" height="30" rx="6" fill="#254b3b" stroke="#5b7950" stroke-opacity=".5"/><text x="69" y="296" fill="#c3d8ac" font-family="Segoe UI,Arial,sans-serif" font-size="11">AI-guided • Execution-checked</text>
+<rect x="816" y="59" width="352" height="62" rx="11" fill="#254b3c" stroke="#5d7a52" stroke-opacity=".55"/><text x="837" y="83" fill="#9cba86" font-family="Segoe UI,Arial,sans-serif" font-size="9" letter-spacing="2">YOUR RECENT CODING HISTORY</text><text x="837" y="106" fill="#e3efda" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="600">A starting point that's actually yours.</text>
+<path d="M992 121V156M901 178V156H1084V178" fill="none" stroke="#a3bf81" stroke-opacity=".5" stroke-width="1.5"/>
+<rect x="805" y="178" width="179" height="119" rx="11" fill="#254838" stroke="#5a774d" stroke-opacity=".6"/><rect x="1001" y="178" width="179" height="119" rx="11" fill="#254838" stroke="#5a774d" stroke-opacity=".6"/>
+<text x="823" y="208" fill="#c9e69c" font-family="Segoe UI,Arial,sans-serif" font-size="24">↗</text><text x="823" y="243" fill="#e3efda" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="600">LeetCode pick</text><text x="823" y="270" fill="#9cb38a" font-family="Segoe UI,Arial,sans-serif" font-size="11">One unsolved challenge.</text>
+<text x="1019" y="208" fill="#c9e69c" font-family="Segoe UI,Arial,sans-serif" font-size="24">✧</text><text x="1019" y="243" fill="#e3efda" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="600">Original problem</text><text x="1019" y="270" fill="#9cb38a" font-family="Segoe UI,Arial,sans-serif" font-size="11">One new perspective.</text>
+</svg>

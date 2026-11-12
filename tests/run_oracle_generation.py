@@ -1,3 +1,4 @@
+from pathlib import Path
 import json
 
 from backend.agents.question_generator import generate_dsa_question
@@ -14,7 +15,11 @@ from backend.services.solution_validator import (
 
 def save_question(question, filename):
 
-    with open(filename, "w", encoding="utf-8") as file:
+    path = Path(filename)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent / "artifacts" / path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as file:
 
         json.dump(
             question,
@@ -22,7 +27,7 @@ def save_question(question, filename):
             indent=4
         )
 
-    print(f"\nQuestion saved to {filename}")
+    print(f"\nQuestion saved to {path}")
 
 
 # =========================================================

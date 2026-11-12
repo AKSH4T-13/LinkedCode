@@ -49,10 +49,11 @@ def execute_and_measure(solution, input_data):
 
 def save_stress_failure(
     failure,
-    filename="stress_test_failure.json"
+    filename=None
 ):
 
-    path = Path(filename)
+    path = Path(filename) if filename is not None else Path(__file__).resolve().parents[2] / "tests" / "artifacts" / "stress_test_failure.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     with path.open("w", encoding="utf-8") as file:
 
@@ -73,7 +74,7 @@ def save_stress_failure(
 def run_stress_tests(
     question,
     stress_cases,
-    failure_file="stress_test_failure.json"
+    failure_file=None
 ):
 
     optimized_solution = question["reference_solution"]

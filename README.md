@@ -1,115 +1,493 @@
-# LinkedCode
+<div align="center">
 
-Personalized DSA practice with FastAPI, LangGraph, Groq and SQLite. LinkedCode analyzes recent accepted LeetCode submissions, recommends an unsolved problem, and generates an original challenge with execution-based validation.
+<img src="tests/assets/linkedcode-banner.svg" alt="LinkedCode — Practice with direction. Your history leads to one LeetCode pick and one original challenge." width="100%" />
 
-## Run locally (Windows PowerShell)
+<br />
 
-From the project root, with the existing virtual environment and private `.env` configured:
+**Your coding history should help you choose what comes next.**
+
+An AI-powered DSA practice workspace that turns recent LeetCode activity into<br />
+**one unsolved recommendation + one original challenge**, with a Python editor to solve it.
+
+<br />
+
+![Python](https://img.shields.io/badge/Python-3.11%2B-173f32?style=flat-square&logo=python&logoColor=d6efa1)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-173f32?style=flat-square&logo=fastapi&logoColor=d6efa1)
+![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-173f32?style=flat-square)
+![Groq](https://img.shields.io/badge/Inference-Groq-173f32?style=flat-square)
+![SQLite](https://img.shields.io/badge/Database-SQLite-173f32?style=flat-square&logo=sqlite&logoColor=d6efa1)
+![Judge0](https://img.shields.io/badge/Python_execution-Judge0-173f32?style=flat-square)
+
+<br />
+
+[Explore the UI](#preview) · [How it works](#architecture) · [Run locally](#quick-start) · [API reference](#api) · [Roadmap](#roadmap)
+
+</div>
+
+<br />
+
+## The idea
+
+Opening a problem list is easy. Knowing **what to practice next** is harder.
+
+LinkedCode starts with your recent accepted LeetCode submissions, looks at the topics and difficulty you have been working with, and builds your next practice pair automatically. You do not have to pick a topic, choose a difficulty, or sift through another random list.
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 01 · Understand
+
+Analyze up to **20 recent accepted submissions** and see your topic and difficulty patterns.
+
+</td>
+<td width="33%" valign="top">
+
+### 02 · Challenge
+
+Get **two ways forward**: an existing LeetCode pick and a newly generated original problem.
+
+</td>
+<td width="33%" valign="top">
+
+### 03 · Solve
+
+Write Python, run examples, submit against correctness and performance cases, and track your practice.
+
+</td>
+</tr>
+</table>
+
+> **The core promise:** your history drives the recommendation. The app does not ask you to configure your next question.
+
+## Preview
+
+### A practice space with a sense of direction
+
+Sidebar navigation, a personalized challenge action, useful progress counts, topic analytics, and a searchable practice library.
+
+![LinkedCode dashboard with personalized challenges, progress cards, and practice navigation](tests/assets/dashboard.png)
+
+### Read. Think. Write. Test.
+
+A split problem-and-code workspace keeps the statement and Python editor independently scrollable. On smaller screens, **Problem / Code** controls help you move between them.
+
+![LinkedCode problem-solving workspace with a problem statement and integrated Python editor](tests/assets/workspace.png)
+
+<sub>Local UI previews. Screenshots show development/QA data; this repository does not currently include a public hosted demo.</sub>
+
+## Features
+
+| Capability | What you can do |
+| :--- | :--- |
+| **History-based personalization** | Derive practice level and topic focus from recent accepted submissions. |
+| **LeetCode recommendations** | Rank catalogue candidates and exclude known solved, previously recommended, and skipped questions. |
+| **Original challenge generation** | Create a problem with a statement, constraints, examples, executable solutions, and complexity analysis. |
+| **Correctness checks** | Audit solutions, generate an oracle, compare outputs, run stress tests, and validate the assembled problem. |
+| **Python workspace** | Edit a complete stdin/stdout program, use four-space Tab indentation, and run examples with **Ctrl + Enter**. |
+| **Performance-aware submissions** | Require both correctness and large hidden performance cases for full solved credit. |
+| **Saved practice** | Browse original questions, reveal solutions, inspect submissions, and keep drafts for the browser session. |
+| **Progress controls** | Mark LeetCode recommendations attempted, skipped, or completed; completion updates solved history. |
+| **Authenticated ownership** | Use JWT authentication and user-scoped queries for questions, history, and submissions. |
+| **Responsive interface** | Practice on desktop, tablet, or mobile without a frontend build step. |
+
+**A note on personalization:** accepted submissions reveal recent exposure, not proven weaknesses. The profile is a recent sample, not an all-time LeetCode skill assessment. Solved-question exclusions also depend on the history stored in the local database.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    UI["Browser · Dashboard + Python editor"] --> API["FastAPI · JWT-authenticated API"]
+    API --> LC["LeetCode GraphQL · Recent accepted submissions"]
+    LC --> PROFILE["Profile analysis · Topics + difficulty"]
+    PROFILE --> POOL["Catalogue retrieval · Exclude known solved/history"]
+    POOL --> A1["Agent 1 · Existing LeetCode recommendation"]
+    POOL --> A2["Agent 2 · Original problem generation"]
+    A2 --> VALIDATE["Audit → Oracle → Test cases → Execution checks"]
+    A1 --> JOIN["Combine both results"]
+    VALIDATE --> JOIN
+    JOIN --> DB[("SQLite · Atomic persistence")]
+    DB --> UI
+    API --> JUDGE["Judge0 · User Python execution"]
+    JUDGE --> RESULTS["Verdicts + submissions + solved progress"]
+    RESULTS --> DB
+
+    classDef app fill:#173f32,stroke:#173f32,color:#eef6e8
+    classDef soft fill:#edf3e4,stroke:#b9cda0,color:#294733
+    class UI,API,JOIN app
+    class LC,PROFILE,POOL,A1,A2,VALIDATE,DB,JUDGE,RESULTS soft
+```
+
+The LangGraph workflow runs the recommendation and original-generation branches in parallel, joins their results, and saves the pair in one database transaction. If the second save fails, the first is rolled back too.
+
+### Inside the original-question pipeline
+
+| Stage | What happens |
+| :--- | :--- |
+| **Core generation** | Produce the statement, examples, both implementations, complexity claims, and a supported stress specification. |
+| **Solution audit** | Check mathematical correctness, assumptions, edge cases, and complexity. |
+| **Correction** | Apply a solution-only JSON patch. The backend preserves the original statement, examples, constraints, and stress specification. |
+| **Oracle generation** | Request a separate executable implementation; reject exact structural duplicates and report similarity heuristics. |
+| **Test generation** | Build **10 normal cases + 15 verification cases** with expected outputs filled by execution. |
+| **Cross-validation** | Compare oracle and optimized outputs; also compare brute force on verification cases. |
+| **Quality + stress checks** | Evaluate the problem and run generated stress cases before final solution validation. |
+| **Persistence** | Save validated results and their validation report, associated with the authenticated user. |
+
+An audited draft that still fails correction gets one fresh problem attempt. Retries are bounded. These checks improve confidence; LLM audits and AST similarity are not mathematical proofs of correctness or algorithmic independence.
+
+## Quick start
+
+### 1. Get the project
+
+```bash
+git clone https://github.com/AKSH4T-13/LinkedCode.git
+cd LinkedCode
+```
+
+**Prerequisites:** Python 3.11+, internet access, and a Groq API key. The frontend uses plain HTML/CSS/JavaScript—no npm install or frontend build is required.
+
+### 2. Create the environment
+
+<details open>
+<summary><strong>Windows · PowerShell</strong></summary>
+
+```powershell
+python -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+</details>
+
+<details>
+<summary><strong>macOS / Linux</strong></summary>
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+</details>
+
+### 3. Add private configuration
+
+Create a `.env` file in the project root:
+
+```dotenv
+GROQ_API_KEY=your_groq_api_key
+JWT_SECRET_KEY=replace_with_a_long_random_secret
+```
+
+Generate a JWT secret locally if needed:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Keep the real `.env`, credentials, local user database, and any debug snapshots containing personal data out of public commits.
+
+### 4. Start LinkedCode
+
+**Windows:**
 
 ```powershell
 .\venv\Scripts\python.exe -X utf8 -m uvicorn backend.main:app --reload
 ```
 
-Open the dashboard at **http://127.0.0.1:8000/app/**. API documentation is at **http://127.0.0.1:8000/docs**. UTF-8 mode prevents Windows console errors when generated text contains mathematical symbols.
+**macOS / Linux, with the environment activated:**
 
-Alternatively, serve the frontend separately:
+```bash
+python -X utf8 -m uvicorn backend.main:app --reload
+```
+
+| Open | Address |
+| :--- | :--- |
+| **Dashboard** | [http://127.0.0.1:8000/app/](http://127.0.0.1:8000/app/) |
+| **Interactive API docs** | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
+| **Health check** | [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) |
+
+UTF-8 mode avoids Windows console errors when generated text contains mathematical symbols. The app creates its SQLite tables on startup at `backend/data/linkedcode.db`.
+
+### 5. Make your next move
+
+1. Register or sign in.
+2. Link your LeetCode username and refresh your analysis.
+3. Select **Create your challenges** once and keep the page open while generation runs.
+4. Open your LeetCode pick, or solve the original challenge in the Python workspace.
+5. Revisit your library and track your progress.
+
+<details>
+<summary><strong>Optional: run the frontend on its own port</strong></summary>
+
+With the API already running:
 
 ```powershell
 .\venv\Scripts\python.exe -m http.server 5500 --directory frontend
 ```
 
-Open http://localhost:5500 with the API running on port 8000. CORS supports localhost and 127.0.0.1 on ports 5500 and 5173. The same-origin `/app/` dashboard does not require a separate frontend server.
+Open [http://localhost:5500](http://localhost:5500). Local CORS permits `localhost` and `127.0.0.1` on ports 5500 and 5173. The normal `/app/` setup needs only the FastAPI server.
 
-## Practice workflow
+</details>
 
-1. Create an account or sign in. JWTs stay in browser session storage; signing out removes them. Tokens expire after 30 minutes.
-2. Link a LeetCode username, then refresh analysis. Analytics describe the recent accepted-submission sample, not the user's entire LeetCode history.
-3. LinkedCode automatically chooses the practice level and topic focus from the last 20 accepted submissions. There are no manual generation preferences.
-4. Generate challenges. Keep the page open while the AI pipeline runs. Rate-limit retries wait within the current phase. A draft that still fails both audits gets one fresh problem attempt; failed drafts are never saved. No automatic frontend retry starts an additional generation request.
-5. Read saved original challenges, examples and constraints. Solutions and practice cases are available in expandable sections.
-6. Update LeetCode practice to attempted, skipped or completed. Completion records a solved problem atomically and is idempotent. Completed recommendations cannot be reopened. Previously recommended, skipped and solved problems are excluded from later candidate pools.
-7. Search saved questions by title/topic and filter by difficulty or recommendation status.
+## Python workspace
+
+| Action | Checks | Saves a submission? | Grants solved credit? |
+| :--- | :--- | :---: | :---: |
+| **Run examples** | The problem's examples | No | No |
+| **Custom input** | Runs stdin and displays stdout/errors; does not judge correctness | No | No |
+| **Submit all tests** | Regular + verification cases, then hidden performance cases | Yes, after completed judging | Only if all stages pass |
+
+Write a **complete Python program** that reads standard input and prints its answer. Standard-library solutions are supported; the app does not install arbitrary packages for a submission.
+
+```python
+import sys
+
+
+def solve():
+    data = sys.stdin.read().split()
+    # Parse the input and implement your solution.
+    # Print the answer in the question's required format.
+
+
+if __name__ == "__main__":
+    solve()
+```
+
+The editor keeps per-user/per-question drafts in browser session storage. Source code and test inputs are sent to the configured Judge0 service. JWTs, Groq credentials, and application environment variables are not forwarded. Submitted source and verdicts are saved in the local database.
+
+### Correct is good. Efficient is better.
+
+Small cases alone can let a quadratic solution slip through. Full Submit therefore uses a second stage:
+
+1. Pass regular correctness and verification cases.
+2. Build up to **three maximum-size hidden patterns** from the problem specification.
+3. Calibrate reference outputs on the **same Judge0 runtime and limits** as the learner.
+4. Cache the calibrated suite and judge the submitted code against it.
+
+A broken or slow reference produces a review/service error rather than blaming the learner. Older small-case-only Accepted submissions remain in history as **Correctness only** and need a full resubmission for performance-aware solved credit.
+
+<details>
+<summary><strong>Runtime limits and judging details</strong></summary>
+
+| Setting | Current implementation |
+| :--- | :--- |
+| Language | Python 3; configurable Judge0 language ID |
+| CPU limit | 3 seconds per case |
+| Wall-clock limit | 8 seconds per case |
+| Memory | 128 MB per case |
+| File/output limit | 64 KB requested from Judge0 |
+| Network access | Disabled for submitted programs |
+| Provider polling | Asynchronous submissions, bounded waits |
+| Provider evaluation batch | Up to 90 seconds per batch; full Submit can use multiple batches |
+| Account limits | One active run and a five-second cooldown; process-local |
+| Performance input size | Supported specifications up to 200,000 elements |
+| Output comparison | Whitespace-insensitive token comparison; no floating-point tolerance/custom checker |
+
+Verification/performance data is omitted from execution results. Reference solutions and practice cases are revealable elsewhere in the app; this is a learning workspace, not a secure examination platform.
+
+A fast algorithm should pass if it fits the actual constraints. Performance tests do not prove asymptotic complexity or reject every solution labelled brute force.
+
+</details>
+
+## Configuration
+
+Only the first two variables are required for the main app. Optional execution examples are in [`tests/.env.execution.example`](tests/.env.execution.example).
+
+| Variable | Purpose / default |
+| :--- | :--- |
+| `GROQ_API_KEY` | Required backend inference credential |
+| `JWT_SECRET_KEY` | Required secret for signing authentication tokens |
+| `GROQ_TPM_LIMIT` | Optional request-budget hint; defaults to `8000`. Does not increase the provider's quota. |
+| `JUDGE0_URL` | Defaults to `https://ce.judge0.com` for development |
+| `JUDGE0_PYTHON_LANGUAGE_ID` | Defaults to `100`; verify the ID on a different Judge0 instance |
+| `JUDGE0_AUTH_TOKEN` | Optional token for a protected Judge0 instance |
+| `JUDGE0_RAPIDAPI_KEY` | Optional key when using a configured RapidAPI Judge0 URL |
+
+Judge0's public endpoint is an external development dependency; its availability, limits, and access requirements are outside this repository's control. See the [Judge0 API reference](https://ce.judge0.com/docs).
+
+<details>
+<summary><strong>Understanding Groq limits</strong></summary>
+
+- **429** means the provider's minute/day allowance is exhausted. Repeatedly clicking Generate does not create more quota. Existing saved problems and Python execution do not consume Groq tokens.
+- **413** means a request is too large for the available request budget; simply waiting may not fix it.
+- The client uses phase-specific output reservations: recommendations up to **1,200**, audits **1,800**, oracle/test-case phases **2,500**, and core/correction/refinement **3,500** tokens.
+- The local input estimate is conservative, not an exact model tokenizer. On a qualifying 413, the client can lower its completion reservation and retry the same complete prompt once.
+- Prompt compaction removes repeated diagnostics and metadata; it does not truncate source code, constraints, or test inputs to force a request through.
+- Daily quota exhaustion still needs better persistent cooldown/reporting and workflow resumption. Short in-process retries cannot solve a long daily-quota wait.
+
+</details>
 
 ## API
 
-All practice endpoints require `Authorization: Bearer <token>`.
+Registration, login, and health checks are public. Practice endpoints require:
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| POST | `/auth/register` | Create account |
-| POST | `/auth/login` | Obtain JWT |
-| GET | `/auth/me` | Current account |
-| PATCH | `/auth/profile` | Link/update LeetCode username |
-| GET | `/leetcode/analyze` | Recent accepted-submission analytics |
-| GET | `/leetcode/recent` | Recent accepted submissions |
-| POST | `/recommendations/generate` | Run both agents; automatically based on recent history; no request body |
-| GET | `/recommendations/history` | User's recommendation history |
-| PATCH | `/recommendations/{slug}/status` | Update `{status}` |
-| GET | `/practice/progress` | User-scoped practice counts |
-| GET | `/generated-questions` | Saved original challenges |
-| GET | `/generated-questions/{id}` | One owned challenge; other users receive 404 |
-| GET | `/health` | Health check (public) |
+```http
+Authorization: Bearer <access_token>
+```
 
-The workflow analyzes the profile, filters candidates, runs the recommendation and generation branches, then saves both results in one SQLite transaction. Generation includes solution auditing/correction, an oracle, 10 regular and 15 verification cases, output comparison, quality evaluation, stress testing and final solution validation. Structural oracle similarity is a heuristic and does not prove independent algorithms.
+<details>
+<summary><strong>Authentication and LeetCode profile</strong></summary>
 
-Data lives in `backend/data/linkedcode.db`. Keep `.env`, API keys, JWT secrets and local databases private. Required environment variable names are `GROQ_API_KEY` and `JWT_SECRET_KEY`; no secrets belong in frontend code.
+| Method | Endpoint | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/auth/register` | Create an account |
+| `POST` | `/auth/login` | Obtain a JWT |
+| `GET` | `/auth/me` | Read the authenticated account |
+| `PATCH` | `/auth/profile` | Link/update a LeetCode username |
+| `GET` | `/leetcode/recent` | Fetch recent accepted submissions |
+| `GET` | `/leetcode/analyze` | Analyze the recent submission sample |
 
-## Targeted verification
+</details>
+
+<details>
+<summary><strong>Challenges, history, and progress</strong></summary>
+
+| Method | Endpoint | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/recommendations/generate` | Generate the personalized pair; no request body needed |
+| `GET` | `/recommendations/history` | Read owned recommendation history |
+| `PATCH` | `/recommendations/{slug}/status` | Set `recommended`, `attempted`, `completed`, or `skipped` |
+| `GET` | `/practice/progress` | Read user-scoped progress counts |
+| `GET` | `/generated-questions` | List saved original challenges |
+| `GET` | `/generated-questions/{id}` | Read one owned original challenge |
+| `GET` | `/health` | Public health check |
+
+Completion is idempotent and records solved history in the same transaction. Completed LeetCode recommendations cannot be reopened. Other users' generated questions and recommendations are not exposed by owned-resource endpoints.
+
+</details>
+
+<details>
+<summary><strong>Python execution and submissions</strong></summary>
+
+| Method | Endpoint | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/generated-questions/{id}/execute` | Run examples/custom input or submit a solution |
+| `GET` | `/generated-questions/{id}/submissions` | Latest 20 owned submission summaries |
+
+```json
+{
+  "code": "import sys\nprint(sum(map(int, sys.stdin.read().split())))",
+  "mode": "examples"
+}
+```
+
+The JSON above illustrates the request shape; replace the code with a valid solution to the selected question. Supported modes are `examples`, `custom`, and `submit`. For custom input, add a `stdin` string.
+
+The server chooses the saved test inputs and expected outputs. Requests cannot override judge cases, provider URLs, language IDs, or execution limits. LeetCode recommendations still open on LeetCode because this app does not own their judge suites.
+
+</details>
+
+## Tests
+
+Tests and manual diagnostic scripts live in [`tests/`](tests/). Configuration is in [`tests/pytest.ini`](tests/pytest.ini); run commands from the repository root with explicit `tests/` paths.
+
+**A focused, mocked set for the generation safeguards:**
 
 ```powershell
-.\venv\Scripts\python.exe -X utf8 -m pytest test_practice_api.py test_auth.py test_candidate_service.py test_lifecycle.py test_main.py test_graph.py -q
+.\venv\Scripts\python.exe -X utf8 -m pytest tests/test_generation_input_contract.py tests/test_constraint_notation.py tests/test_solution_correction_patch.py tests/test_llm_token_budget.py -q
+```
+
+**Python judging and ownership checks:**
+
+```powershell
+.\venv\Scripts\python.exe -X utf8 -m pytest tests/test_python_runner.py tests/test_python_execution_api.py tests/test_performance_judge.py -q
+```
+
+**Inspect collection without running test functions:**
+
+```powershell
+.\venv\Scripts\python.exe -X utf8 -m pytest tests --collect-only -q
+```
+
+**Frontend syntax check, if Node.js is available:**
+
+```bash
 node --check frontend/script.js
 ```
 
-API tests use isolated databases and mocked external services. Live Groq runs consume API quota and should be run deliberately.
+Mocked API tests use isolated databases. Some legacy modules also perform local checks at import time. A directory-wide pytest run includes a live Groq check in `tests/test_llm.py`; manual generation and database helpers may consume quota or modify local data. See [`tests/README.md`](tests/README.md) before running those deliberately.
 
-## Current limitations
+## Project layout
 
-Local development integration is implemented. Generated Python runs in subprocesses, not a hardened sandbox; execution isolation remains necessary before exposing generation to untrusted/public users. History currently loads all owned rows, and generation runs within a single HTTP request; pagination and durable background jobs remain future reliability work. There is no deployment setup in this project.
+```text
+LinkedCode/
+├── backend/
+│   ├── agents/                 # Recommendation, generation, refinement
+│   ├── core/                   # JWT, password hashing, authenticated users
+│   ├── graph/                  # LangGraph state, nodes, workflow
+│   ├── llm/                    # Groq clients and token-budget handling
+│   ├── routers/                # Auth, practice, Python execution APIs
+│   ├── schemas/                # Request/response models
+│   ├── services/               # LeetCode, candidates, validation, judging
+│   ├── data/                   # Local SQLite and catalogue cache
+│   ├── models.py               # Users, questions, history, submissions, suites
+│   └── main.py                 # FastAPI + static frontend entry point
+├── frontend/
+│   ├── index.html              # Dashboard and practice workspace
+│   ├── style.css               # Responsive visual system
+│   └── script.js               # Auth, API flows, editor, results
+├── tests/
+│   ├── test_*.py               # Automated and integration checks
+│   ├── assets/                 # README banner and interface previews
+│   ├── artifacts/              # Local debug snapshots and failure reports
+│   ├── pytest.ini              # Test/import configuration
+│   └── README.md               # Test and manual-helper guidance
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
 
-## Python editor and execution
+## Tech stack
 
-Open an original challenge from the practice trail. The question dialog includes a Python editor with four-space Tab indentation, Ctrl+Enter to run examples, and per-user/per-question drafts in browser session storage.
+| Layer | Built with |
+| :--- | :--- |
+| Interface | HTML · CSS · JavaScript |
+| API | FastAPI · Pydantic · Uvicorn |
+| AI workflow | LangGraph · LangChain · Groq · `openai/gpt-oss-20b` |
+| Persistence | SQLite · SQLAlchemy |
+| Authentication | JWT · python-jose · Passlib/bcrypt |
+| Coding data | LeetCode GraphQL |
+| User code execution | Judge0 · Python 3 |
+| Verification | pytest · mocked providers · isolated test databases |
 
-- **Run examples** judges the program against the question's examples. It does not create a submission or mark the question solved.
-- **Custom input** runs stdin and displays stdout/errors; it does not judge correctness.
-- **Submit all tests** judges the saved regular and verification cases. Submission verdicts and source code are stored in the local database. Accepted submissions contribute to the unique original-challenges-solved counter. Provider failures are not recorded as wrong answers.
+## Roadmap
 
-Programs must read stdin and print stdout; Python standard-library solutions are supported. Output comparison ignores whitespace differences and compares remaining tokens exactly. There is no floating-point tolerance or custom checker. Verification inputs/outputs are omitted from execution results, but this is a practice product with revealable reference solutions, not an examination system.
+**Implemented**
 
-The backend sends source code and inputs to the configured Judge0 service; browser JWTs and project environment variables are not forwarded. The default development endpoint is `https://ce.judge0.com`, with Python language ID `100`, verified during integration. Availability and quotas belong to that provider. To use another Judge0 instance, copy the relevant settings from `.env.execution.example` into the private `.env` and restart the backend. API keys remain backend-only. For token-authenticated instances use `JUDGE0_AUTH_TOKEN`; for a RapidAPI instance set its URL and `JUDGE0_RAPIDAPI_KEY`. Confirm the Python language ID on your chosen instance.
+- [x] Account authentication and LeetCode profile linking
+- [x] History-driven recommendations and original-problem generation
+- [x] Auditing, correction patches, oracle comparison, and stress checks
+- [x] Atomic persistence, owned history, status controls, and progress
+- [x] Responsive dashboard and integrated Python workspace
+- [x] Maximum-size performance judging with calibrated, cached reference outputs
 
-Each case requests 3 CPU seconds, an 8-second wall limit, 128 MB memory, a 64 KB output/file limit, and disabled network access. The adapter polls asynchronous submissions and bounds overall request time to 90 seconds. There is a five-second per-account cooldown and one active execution request per account, maintained in process memory for local single-worker use. No user solution falls back to the application's subprocess validator.
+**Next**
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| POST | `/generated-questions/{id}/execute` | `{code, mode: "examples" / "custom" / "submit", stdin?}` |
-| GET | `/generated-questions/{id}/submissions` | Latest 20 owned submission summaries |
+- [ ] Isolate the generator's reference-code execution before public deployment
+- [ ] Add persistent generation jobs, checkpoints, and quota-aware recovery
+- [ ] Improve daily-limit cooldown and error reporting
+- [ ] Add dedicated generators for supplied parent arrays, edge lists, and other structured inputs
+- [ ] Add database migrations, pagination, and deployment configuration
+- [ ] Explore C++ and Java execution after the Python workflow stabilizes
 
-Both endpoints authenticate the user and require ownership of a validated original question. Test inputs and expected outputs are loaded from the server; requests cannot override cases, runtimes, limits or provider URLs. LeetCode recommendations still open on LeetCode, since the app does not own their judge test suites.
+<details>
+<summary><strong>Current scope and deployment boundaries</strong></summary>
 
-Execution tests: `python -m pytest test_python_runner.py test_python_execution_api.py -q`. These mock Judge0 and use isolated databases. The original AI-generation validation still uses the existing subprocess executor; hardening that separate path remains pending.
+- **Local development:** this is a functioning local application, not a production-hardened public deployment.
+- **Two execution paths:** user editor submissions use Judge0. AI-generated solutions in the generation/validation pipeline still use the existing subprocess executor and need proper isolation.
+- **Supported input shapes:** original problems currently use `N + N independent bounded integers`, optionally with an independent scalar `K`. Tree/Graph topics require implicit structures derived from those arrays. Supplied parent arrays, edges, or bounds like `P[i] < i` need dedicated valid-input generators.
+- **Long-running work:** generation happens within the HTTP request. Durable background jobs and resumable phase state are not implemented yet.
+- **Local persistence:** SQLite lives on disk; a hosting filesystem must not be treated as durable storage without appropriate configuration or a database migration.
+- **Shared quotas:** changing the hosting provider does not increase Groq or Judge0 allowances. Process-local run locks/cooldowns are not distributed rate limiting.
 
-Provider API reference: https://ce.judge0.com/docs
+</details>
 
-### Performance judging
+---
 
-Full Submit now has two stages. First, the regular correctness and verification cases are judged. If these pass, the judge runs up to three hidden maximum-size patterns (reverse sorted, duplicate-heavy and random) from the problem's stress specification. Reference outputs are calculated on the same Judge0 runtime and 3-second CPU/128 MB limits, then cached in `question_performance_suites`. The cache is invalidated when the reference implementation, specification, runtime, provider or suite version changes.
+<div align="center">
 
-If the reference cannot finish within the same budget, or its expected output exceeds the supported capture size, submission returns a problem-review/service error instead of blaming the learner. Cases use the declared `n_max`; this implementation supports specifications up to 200,000 elements. Problems without a supported stress specification remain available for example/custom runs, but are not accepted by the full performance judge.
+**Less random practice. More intentional progress.**
 
-An accepted full submission requires all correctness and performance cases to pass. Performance failures appear as hidden **Performance** results. Small-case-only historical Accepted submissions stay in history as **Correctness only**, and no longer grant full solved credit until resubmitted against the performance suite. This does not prove asymptotic complexity or reject every algorithm labelled brute force: algorithms that finish correctly within the real constraints should pass.
+<sub>LinkedCode · Your history. Your next challenge.</sub>
 
-### Groq request budgets
-
-Groq calls now reserve output tokens by phase instead of giving every request a large completion allowance. Recommendations reserve up to 1,200 tokens, audits 1,800, oracle/test-case phases 2,500, and core/correction/refinement phases 3,500. A conservative local input-size estimate reduces that reservation further when needed. All recent-question identities and topic information are kept, while duplicate topic metadata and diagnostic reports are omitted from prompts.
-
-`GROQ_TPM_LIMIT` optionally sets the request-budget limit (default 8,000, matching the observed account limit). The local estimate is not an exact model tokenizer. If Groq reports a 413 with its actual `Limit` and `Requested` counts, the client can reduce the output reservation and retry the same complete prompt once. If it still cannot fit, generation returns a clear 503 budget error instead of repeatedly sending an oversized request. Source code, constraints and testcase inputs are never truncated to force a fit. Ordinary 429 quota exhaustion is separate and can still require waiting for other requests' token usage to expire.
-
-### Solution correction patches
-
-Audit correction responses now contain only the two implementations and their three complexity fields. The backend applies those five fields onto a deep copy of the original problem. Model-returned descriptions, examples, constraints and stress specifications are ignored rather than copied or rewritten. Corrected code still passes structural validation and another correctness audit against the original statement. This also avoids spending completion tokens reproducing immutable problem text.
-
-### Supported generated-problem input contracts
-
-The current stress infrastructure supports `N + N independent bounded integers`, optionally with an independently bounded scalar `K`. Tree/Graph topics may still be personalized, but their structures must be implicit (for example, complete-tree node weights or a Cartesian tree derived from any integer array). Supplied parent arrays, edge lists and index-dependent bounds such as `P[i] < i` require specialized valid-structure generators and are not supported by the current array generator. Such drafts are rejected early with representation guidance for the generation retry; missing array bounds are not fabricated to make a tree draft pass.
+</div>
