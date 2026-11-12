@@ -1,0 +1,140 @@
+{
+    "title": "Minimal Distinct Subarray Sum",
+    "difficulty": "Hard",
+    "topics": [
+        "Array",
+        "Binary Search"
+    ],
+    "description": "You are given an array of positive integers $a_1,a_2,\\dots ,a_n$ and an integer $K$. A *distinct subarray* is a contiguous segment $a_l,a_{l+1},\\dots ,a_r$ in which all elements are pairwise different. Among all distinct subarrays whose sum is at least $K$, find the minimum possible length $r-l+1$. If no such subarray exists, output `-1`.\n\nThe array can be large, so an efficient algorithm is required.",
+    "input_format": "The first line contains two integers $n$ and $K$ ($1\\le n\\le 2\\cdot10^5$, $1\\le K\\le 10^{14}$). The second line contains $n$ integers $a_1,a_2,\\dots ,a_n$ ($1\\le a_i\\le 10^9$).",
+    "output_format": "Print a single integer \u2013 the minimum length of a distinct subarray with sum at least $K$, or `-1` if it does not exist.",
+    "constraints": [
+        "$1\\le n\\le 2\\cdot10^5$",
+        "$1\\le K\\le 10^{14}$",
+        "$1\\le a_i\\le 10^9$"
+    ],
+    "examples": [
+        {
+            "input": "5 8\n1 2 3 4 5\n",
+            "output": "2\n",
+            "explanation": "The subarray [4,5] has sum 9 and length 2, which is the smallest possible."
+        },
+        {
+            "input": "4 10\n5 5 5 5\n",
+            "output": "-1\n",
+            "explanation": "All elements are equal, so no distinct subarray exists."
+        }
+    ],
+    "test_cases": [
+        {
+            "input": "1 5\n5",
+            "expected_output": "1"
+        },
+        {
+            "input": "1 6\n5",
+            "expected_output": "-1"
+        },
+        {
+            "input": "2 3\n1 2",
+            "expected_output": "2"
+        },
+        {
+            "input": "2 4\n1 2",
+            "expected_output": "-1"
+        },
+        {
+            "input": "5 15\n1 2 3 4 5",
+            "expected_output": "5"
+        },
+        {
+            "input": "5 16\n1 2 3 4 5",
+            "expected_output": "-1"
+        },
+        {
+            "input": "6 7\n3 1 4 1 5 9",
+            "expected_output": "2"
+        },
+        {
+            "input": "6 20\n3 1 4 1 5 9",
+            "expected_output": "-1"
+        },
+        {
+            "input": "7 10\n2 7 1 8 2 8 1",
+            "expected_output": "2"
+        },
+        {
+            "input": "7 30\n2 7 1 8 2 8 1",
+            "expected_output": "-1"
+        }
+    ],
+    "reference_solution": "import sys\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    it = iter(data)\n    n = int(next(it))\n    K = int(next(it))\n    a = [int(next(it)) for _ in range(n)]\n\n    # Helper to check if there exists a distinct subarray of length L with sum >= K\n    def ok(L):\n        if L > n:\n            return False\n        seen = set()\n        s = 0\n        l = 0\n        for r in range(n):\n            val = a[r]\n            # expand window to include a[r]\n            while val in seen:\n                # shrink from left\n                seen.remove(a[l])\n                s -= a[l]\n                l += 1\n            seen.add(val)\n            s += val\n            # window size is r-l+1\n            if r - l + 1 > L:\n                # shrink to size L\n                seen.remove(a[l])\n                s -= a[l]\n                l += 1\n            if r - l + 1 == L and s >= K:\n                return True\n        return False\n\n    lo, hi = 1, n\n    ans = -1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if ok(mid):\n            ans = mid\n            hi = mid - 1\n        else:\n            lo = mid + 1\n    print(ans)\n\nif __name__ == \"__main__\":\n    solve()\n",
+    "brute_force_solution": "import sys\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    it = iter(data)\n    n = int(next(it))\n    K = int(next(it))\n    a = [int(next(it)) for _ in range(n)]\n    best = None\n    for l in range(n):\n        seen = set()\n        s = 0\n        for r in range(l, n):\n            if a[r] in seen:\n                break\n            seen.add(a[r])\n            s += a[r]\n            if s >= K:\n                length = r - l + 1\n                if best is None or length < best:\n                    best = length\n                break\n    print(best if best is not None else -1)\n\nif __name__ == \"__main__\":\n    solve()\n",
+    "verification_test_cases": [
+        {
+            "input": "3 6\n1 2 3",
+            "expected_output": "3"
+        },
+        {
+            "input": "3 5\n1 2 3",
+            "expected_output": "2"
+        },
+        {
+            "input": "3 4\n1 2 3",
+            "expected_output": "2"
+        },
+        {
+            "input": "3 3\n1 2 3",
+            "expected_output": "1"
+        },
+        {
+            "input": "4 10\n5 5 5 5",
+            "expected_output": "-1"
+        },
+        {
+            "input": "4 5\n5 5 5 5",
+            "expected_output": "1"
+        },
+        {
+            "input": "5 9\n1 2 3 4 5",
+            "expected_output": "2"
+        },
+        {
+            "input": "5 15\n1 2 3 4 5",
+            "expected_output": "5"
+        },
+        {
+            "input": "5 16\n1 2 3 4 5",
+            "expected_output": "-1"
+        },
+        {
+            "input": "6 12\n1 2 3 4 5 6",
+            "expected_output": "3"
+        },
+        {
+            "input": "6 21\n1 2 3 4 5 6",
+            "expected_output": "6"
+        },
+        {
+            "input": "6 22\n1 2 3 4 5 6",
+            "expected_output": "-1"
+        },
+        {
+            "input": "2 1\n1000000000 1",
+            "expected_output": "1"
+        },
+        {
+            "input": "2 1000000001\n1000000000 1",
+            "expected_output": "2"
+        },
+        {
+            "input": "2 1000000002\n1000000000 1",
+            "expected_output": "-1"
+        }
+    ],
+    "verification_approach": {
+        "algorithm": "The verifier uses a prefix\u2011sum based two\u2011pointer approach that is mathematically distinct from the provided solutions. For each position r in the array we maintain the leftmost index l such that the subarray a[l..r] contains only distinct elements. This is done by keeping a dictionary of the last occurrence of each value. When a new element a[r] is processed, l is moved to one position after its previous occurrence if necessary. The subarray a[l..r] is then guaranteed to be distinct.\n\nLet pref[i] be the sum of the first i elements (pref[0] = 0). The sum of a subarray a[x..r] equals pref[r+1] - pref[x]. For a fixed r, we need the smallest length r-x+1 such that this sum is at least K. Because pref is strictly increasing, the condition pref[r+1] - pref[x] >= K is equivalent to pref[x] <= pref[r+1] - K. Among all x in [l, r] satisfying this inequality, the minimal length is obtained by choosing the largest such x. Therefore, for each r we binary\u2011search the largest index x in the interval [l, r] with pref[x] <= pref[r+1] - K. If such an x exists, we update the global answer with the length r-x+1.\n\nThis algorithm runs in O(n log n) time (due to the binary search) and uses O(n) additional memory for the prefix sums and the last\u2011occurrence dictionary. It correctly implements the mathematical definition of the problem and is independent of the two reference solutions.",
+        "independent_oracle": "import sys\nimport bisect\n\ndef solve() -> None:\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    it = iter(data)\n    n = int(next(it))\n    K = int(next(it))\n    a = [int(next(it)) for _ in range(n)]\n\n    # prefix sums\n    pref = [0] * (n + 1)\n    for i in range(n):\n        pref[i + 1] = pref[i] + a[i]\n\n    last = {}          # last occurrence of each value\n    l = 0              # left boundary of current distinct window\n    ans = None\n\n    for r in range(n):\n        val = a[r]\n        if val in last:\n            # move left boundary past the previous occurrence\n            l = max(l, last[val] + 1)\n        last[val] = r\n\n        # We need the largest x in [l, r] with pref[x] <= pref[r+1] - K\n        target = pref[r + 1] - K\n        if target < pref[l]:\n            # No subarray ending at r can reach sum K\n            continue\n        # bisect_right returns insertion point; subtract 1 to get largest index <= target\n        x = bisect.bisect_right(pref, target, lo=l, hi=r + 1) - 1\n        if x >= l:\n            length = r - x + 1\n            if ans is None or length < ans:\n                ans = length\n\n    print(ans if ans is not None else -1)\n\nif __name__ == \"__main__\":\n    solve()\n"
+    },
+    "time_complexity": "O(n log n)",
+    "space_complexity": "O(n)"
+}

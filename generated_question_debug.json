@@ -1,0 +1,140 @@
+{
+    "title": "Maximum Subarray with Limited Sum",
+    "difficulty": "Hard",
+    "topics": [
+        "Array",
+        "Binary Search"
+    ],
+    "description": "Given an array of positive integers A of length N and an integer K, find the maximum possible length L of a contiguous subarray such that the sum of its elements does not exceed K. If multiple subarrays have the same maximum length, choose the one with the smallest starting index. Output the length L and the starting index (1\u2011based).",
+    "input_format": "The first line contains two integers N and K (1\u00a0\u2264\u00a0N\u00a0\u2264\u00a0200000, 1\u00a0\u2264\u00a0K\u00a0\u2264\u00a010^15). The second line contains N space\u2011sorted integers A1\u00a0A2\u00a0\u2026\u00a0AN (1\u00a0\u2264\u00a0Ai\u00a0\u2264\u00a010^9).",
+    "output_format": "Print two integers separated by a space: the maximum length L and the starting index of the chosen subarray.",
+    "constraints": [
+        "1\u00a0\u2264\u00a0N\u00a0\u2264\u00a0200000",
+        "1\u00a0\u2264\u00a0Ai\u00a0\u2264\u00a010^9",
+        "1\u00a0\u2264\u00a0K\u00a0\u2264\u00a010^15"
+    ],
+    "examples": [
+        {
+            "input": "5 10\n1 2 3 4 5\n",
+            "output": "4 1",
+            "explanation": "The subarray [1,2,3,4] has sum 10 and length 4. No longer subarray fits within K. Starting index is 1."
+        },
+        {
+            "input": "6 7\n4 1 2 1 5 1\n",
+            "output": "3 2",
+            "explanation": "Subarray [1,2,1] starting at index 2 has sum 4 and length 3. No longer subarray fits within K. Starting index is 2."
+        }
+    ],
+    "reference_solution": "import sys\n\ndef solve():\n    data=sys.stdin.read().strip().split()\n    if not data: return\n    it=iter(data)\n    n=int(next(it)); K=int(next(it))\n    a=[int(next(it)) for _ in range(n)]\n    # two pointers\n    l=0\n    cur=0\n    best_len=0\n    best_l=0\n    for r in range(n):\n        cur+=a[r]\n        while cur> K and l<=r:\n            cur-=a[l]\n            l+=1\n        cur_len=r-l+1\n        if cur_len>best_len:\n            best_len=cur_len\n            best_l=l\n    print(best_len, best_l+1)\n\nif __name__=='__main__':\n    solve()\n",
+    "brute_force_solution": "import sys\n\ndef solve():\n    data=sys.stdin.read().strip().split()\n    if not data: return\n    it=iter(data)\n    n=int(next(it)); K=int(next(it))\n    a=[int(next(it)) for _ in range(n)]\n    best_len=0\n    best_l=0\n    for i in range(n):\n        s=0\n        for j in range(i,n):\n            s+=a[j]\n            if s> K:\n                break\n            cur_len=j-i+1\n            if cur_len>best_len:\n                best_len=cur_len\n                best_l=i\n    print(best_len, best_l+1)\n\nif __name__=='__main__':\n    solve()\n",
+    "time_complexity": "O(N)",
+    "space_complexity": "O(1)",
+    "test_cases": [
+        {
+            "input": "1 5\n5",
+            "expected_output": "1 1"
+        },
+        {
+            "input": "1 4\n5",
+            "expected_output": "0 1"
+        },
+        {
+            "input": "5 1000000000000000\n1 1 1 1 1",
+            "expected_output": "5 1"
+        },
+        {
+            "input": "5 3\n1 2 3 4 5",
+            "expected_output": "2 1"
+        },
+        {
+            "input": "5 3\n2 2 2 2 2",
+            "expected_output": "1 1"
+        },
+        {
+            "input": "10 15\n1 2 3 4 5 6 7 8 9 10",
+            "expected_output": "5 1"
+        },
+        {
+            "input": "10 15\n5 5 5 5 5 5 5 5 5 5",
+            "expected_output": "3 1"
+        },
+        {
+            "input": "6 7\n4 1 2 1 5 1",
+            "expected_output": "3 2"
+        },
+        {
+            "input": "8 20\n3 1 4 1 5 9 2 6",
+            "expected_output": "5 1"
+        },
+        {
+            "input": "7 10\n1 2 3 4 5 6 7",
+            "expected_output": "4 1"
+        }
+    ],
+    "verification_test_cases": [
+        {
+            "input": "3 5\n1 2 3",
+            "expected_output": "3 1"
+        },
+        {
+            "input": "3 4\n2 2 2",
+            "expected_output": "1 1"
+        },
+        {
+            "input": "4 6\n1 1 1 1",
+            "expected_output": "4 1"
+        },
+        {
+            "input": "4 3\n2 1 1 2",
+            "expected_output": "2 2"
+        },
+        {
+            "input": "5 7\n1 2 3 4 5",
+            "expected_output": "3 1"
+        },
+        {
+            "input": "5 7\n4 1 2 1 5",
+            "expected_output": "3 2"
+        },
+        {
+            "input": "2 1\n1 1",
+            "expected_output": "1 1"
+        },
+        {
+            "input": "2 0\n1 1",
+            "expected_output": "0 1"
+        },
+        {
+            "input": "6 10\n1 2 3 4 5 6",
+            "expected_output": "4 1"
+        },
+        {
+            "input": "6 10\n5 5 5 5 5 5",
+            "expected_output": "2 1"
+        },
+        {
+            "input": "7 15\n1 2 3 4 5 6 7",
+            "expected_output": "5 1"
+        },
+        {
+            "input": "7 15\n7 6 5 4 3 2 1",
+            "expected_output": "5 3"
+        },
+        {
+            "input": "8 12\n1 1 1 1 1 1 1 1",
+            "expected_output": "8 1"
+        },
+        {
+            "input": "8 12\n2 2 2 2 2 2 2 2",
+            "expected_output": "3 1"
+        },
+        {
+            "input": "9 9\n1 2 3 4 5 6 7 8 9",
+            "expected_output": "3 1"
+        }
+    ],
+    "verification_approach": {
+        "algorithm": "The oracle uses the mathematical definition of the problem: for every possible starting index `i` we need the farthest index `j` such that the sum of the subarray `A[i..j]` does not exceed `K`.  Because all array elements are positive, the prefix sum array `P` is strictly increasing.  For a fixed `i` the condition `P[j] - P[i-1] <= K` is equivalent to `P[j] <= P[i-1] + K`.  Thus for each `i` we can binary\u2011search the largest `j` with `P[j] <= P[i-1] + K`.  This gives the longest subarray starting at `i`.  We keep the overall maximum length and, in case of ties, the smallest starting index.  The algorithm runs in `O(N log N)` time and `O(N)` memory, which is different from the two\u2011pointer linear solution and the brute\u2011force quadratic solution.",
+        "independent_oracle": "import sys\n\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    it = iter(data)\n    n = int(next(it))\n    K = int(next(it))\n    a = [int(next(it)) for _ in range(n)]\n\n    # Build prefix sums: P[0] = 0, P[i] = sum of first i elements\n    P = [0] * (n + 1)\n    for i in range(1, n + 1):\n        P[i] = P[i - 1] + a[i - 1]\n\n    best_len = 0\n    best_start = 0  # 0\u2011based\n\n    # For each starting index i (0\u2011based)\n    for i in range(n):\n        target = P[i] + K\n        # Binary search for the largest index j such that P[j] <= target\n        lo, hi = i + 1, n  # search in [i+1, n]\n        while lo <= hi:\n            mid = (lo + hi) // 2\n            if P[mid] <= target:\n                lo = mid + 1\n            else:\n                hi = mid - 1\n        # hi is the largest valid end index (1\u2011based in prefix array)\n        j = hi  # 1\u2011based index in prefix array\n        cur_len = j - i\n        if cur_len > best_len:\n            best_len = cur_len\n            best_start = i\n\n    # Output 1\u2011based starting index\n    print(best_len, best_start + 1)\n\nif __name__ == \"__main__\":\n    solve()\n"
+    }
+}

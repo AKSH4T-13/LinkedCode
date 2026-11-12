@@ -1,0 +1,19 @@
+{
+    "test_case": 1,
+    "category": "minimum_boundary",
+    "input": "1\n-1000000000",
+    "result": {
+        "test_case": 1,
+        "category": "minimum_boundary",
+        "oracle_checked": true,
+        "passed": false,
+        "optimized_output": null,
+        "optimized_error": "Traceback (most recent call last):\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmpz2lc_rqp.py\", line 34, in <module>\n    solve()\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmpz2lc_rqp.py\", line 11, in solve\n    arr = [int(next(it)) for _ in range(n)]\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmpz2lc_rqp.py\", line 11, in <listcomp>\n    arr = [int(next(it)) for _ in range(n)]\n               ^^^^^^^^\nStopIteration",
+        "optimized_time": 0.2053,
+        "optimized_performance_ok": false,
+        "oracle_output": null,
+        "oracle_error": "Traceback (most recent call last):\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmp9ivd6wuw.py\", line 37, in <module>\n    solve()\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmp9ivd6wuw.py\", line 11, in solve\n    arr = [int(next(it)) for _ in range(n)]\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Vansh\\AppData\\Local\\Temp\\tmp9ivd6wuw.py\", line 11, in <listcomp>\n    arr = [int(next(it)) for _ in range(n)]\n               ^^^^^^^^\nStopIteration",
+        "oracle_time": 0.298,
+        "oracle_performance_ok": false
+    }
+}
